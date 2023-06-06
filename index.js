@@ -9,10 +9,15 @@ const port = process.env.PORT || 80;
 // Create web server that returns the ip address of the client
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end(`IP Address: ${req.connection.remoteAddress}\n 
-    Port: ${req.connection.remotePort}\n 
-    IP: ${req.socket.remoteAddress}\n
-    User-Agent: ${req.headers['user-agent']} \n`);
+    // Get ip address of client
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+});
+
+server.on('request', (req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    // Get ip address of client
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    res.end(`Your IP address is ${req.socket.remoteAddress}`);
 });
 
 // Start web server
