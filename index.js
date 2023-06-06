@@ -1,27 +1,14 @@
-// Create web server to listen on port 80 using http module
+// using express, when a client connects to the service, return the client IP address
 
-// Import http module
-const http = require('http');
+const express = require('express');
+const app = express();
 
-// Set port to 80
+app.get('/', (req, res) => {
+    res.send(`Your IP address is ${req.ip}`);
+    }
+);
+
 const port = process.env.PORT || 80;
 
-// Create web server that returns the ip address of the client
-const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    // Get ip address of client
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-});
+app.listen(port, () => console.log(`Listening on port ${port}`));
 
-server.on('request', (req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    // Get ip address of client
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    res.end(`Your IP address is ${req.socket.remoteAddress}`);
-});
-
-// Start web server
-server.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
-}
-);
