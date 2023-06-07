@@ -2,11 +2,12 @@
 
 const express = require('express');
 const app = express();
-const fs = require('fs');
+var parser = require('ua-parser-js');
 
 app.set('trust proxy', true)
 
 app.get('/', (req, res) => {
+    var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
         <title>IP Address</title>
@@ -23,14 +24,9 @@ app.get('/', (req, res) => {
     </style>
     <body>
         <h1>Your IP address is ${req.ip}</h1>
-        <h1>Your browser is ${req.headers['user-agent'].match(/Edg\/\d{1,3}\.\d{1,3}\.\d{1,4}\.\d{1,3}/g) || req.headers['user-agent']}</h1>
+        <h1>Your browser is ${info.browser.name} version ${info.browser.version}</h1>
     </body>
     </html>`);
-    // create an index.html file with the client ip address
-    // fs.writeFileSync(`${__dirname}/app/index${req.ip}.html`, `Your IP address is ${req.ip}`, function (err) {
-    //     console.log(err);
-    // });
-    // res.sendFile(__dirname + `app/index${req.ip}.html`);
 }
 );
 
