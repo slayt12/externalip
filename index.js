@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
     var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
-        <title>IP Address</title>
+        <title>${req.ip}</title>
     </head> 
     <style>
         body {
@@ -23,8 +23,8 @@ app.get('/', (req, res) => {
         }
     </style>
     <body>
-        <h1>Your IP address is ${req.ip}</h1>
-        <h1>Your browser is ${info.browser.name} version ${info.browser.version}</h1>
+        <h1>IP address: ${req.ip}</h1>
+        <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
     </body>
     </html>`);
 }
