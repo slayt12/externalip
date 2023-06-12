@@ -21,10 +21,23 @@ app.get('/', (req, res) => {
             text-align: center;
             margin-top: 10%;
         }
+        .footer {
+            position: fixed;
+            bottom: 10;
+            width: 100%;
+            text-align: center;
+            color: #ffffff;
+        }
+        p a {
+            color: #ffffff;
+            text-decoration: none;
+        }
     </style>
     <body>
         <h1>IP address: ${req.ip}</h1>
         <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
+        <div class="footer">
+            <p>Gabriel Slayton - <a href="https://www.slaytons.net">Slayton\'s Technology Services</a></p>
     </body>
     </html>`);
 }
