@@ -42,6 +42,15 @@ app.get('/', (req, res) => {
         }
     </style>
     <body>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-68ZJDQH8YZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-68ZJDQH8YZ');
+</script>
         <h1>IP address: ${req.ip}</h1>
         <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
         <div class="footer">
