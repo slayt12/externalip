@@ -1,16 +1,24 @@
 // using express, when a client connects to the service, return the client IP address
 
-const express = require('express');
+const express = require("express");
 const app = express();
-var parser = require('ua-parser-js');
+var parser = require("ua-parser-js");
 
-app.set('trust proxy', true)
+app.set("trust proxy", true);
 
-app.get('/', (req, res) => {
-  var info = parser(req.headers['user-agent']);
+app.get("/", (req, res) => {
+  var info = parser(req.headers["user-agent"]);
   res.send(`<html>
     <head>
         <title>${req.ip}</title>
+        <meta name="title" content="IP No BS">
+<meta name="description" content="Returns the IP and browser version of your current connection.">
+<meta name="keywords" content="what is my ip, my ip, ip address, browser version, ipv4, what's my ip">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="10 days">
+<meta name="author" content="Gabriel Slayton">
     </head> 
     <style>
         body {
@@ -34,14 +42,22 @@ app.get('/', (req, res) => {
         }
     </style>
     <body>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-68ZJDQH8YZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-68ZJDQH8YZ');
+</script>
         <h1>IP address: ${req.ip}</h1>
         <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
         <div class="footer">
             <p>Gabriel Slayton - <a href="https://www.slaytons.net">Slayton\'s Technology Services</a></p>
     </body>
     </html>`);
-}
-);
+});
 
 const port = process.env.PORT || 80;
 
