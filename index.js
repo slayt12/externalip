@@ -11,6 +11,14 @@ app.get('/', (req, res) => {
     res.send(`<html>
     <head>
         <title>${req.ip}</title>
+        <meta name="title" content="IP No BS">
+<meta name="description" content="Returns the IP and browser version of your current connection.">
+<meta name="keywords" content="what is my ip, my ip, ip address, browser version, ipv4, what's my ip">
+<meta name="robots" content="index, follow">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="language" content="English">
+<meta name="revisit-after" content="10 days">
+<meta name="author" content="Gabriel Slayton">
     </head> 
     <style>
         body {
