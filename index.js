@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
     var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
-        <title>${req.ip}</title>
+        <title>IP: ${req.ip}</title>
     </head> 
     <style>
         body {
