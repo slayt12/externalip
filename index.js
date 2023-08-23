@@ -11,9 +11,11 @@ app.set('trust proxy', true)
 
 app.get('/', async (req, res) => {
     async function getISP() {
-        const {isp} = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
+        const { isp } = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
         return isp;
     }
+
+    saveLog(req.ip);
     var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
@@ -77,6 +79,11 @@ app.get('/', async (req, res) => {
     </html>`);
 }
 );
+
+
+async function saveLog(ip) {
+    console.log(ip);
+}
 
 const port = process.env.PORT || 80;
 
