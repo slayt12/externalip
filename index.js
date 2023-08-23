@@ -62,6 +62,15 @@ app.get('/', async (req, res) => {
         <h1>IP address: ${req.ip}</h1>
         <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
         <h1>ISP: ${await getISP()}</h1>
+        <script async
+  src="https://js.stripe.com/v3/buy-button.js">
+</script>
+
+<stripe-buy-button
+  buy-button-id="buy_btn_1NiO2oEPb7xHDOFyKoygn0os"
+  publishable-key="pk_live_51Ne1OuEPb7xHDOFyN3seam6hy5oV2HPmDSFRbTcPuy0rKC3jqmj23Zys6dvbZ2xLWlbLlOrkzeQjA7wDqWCq3Ob600Z2VISyFc"
+>
+</stripe-buy-button>
         <div class="footer">
             <p>Gabriel Slayton - <a href="https://www.slaytons.net">Slayton\'s Technology Services</a></p>
     </body>
