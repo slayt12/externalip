@@ -11,7 +11,7 @@ app.set('trust proxy', true)
 
 app.get('/', async (req, res) => {
     async function getISP() {
-        const {isp} = await fetch('http://ip-api.com/json/').then(res => res.json());
+        const {isp} = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
         return isp;
     }
     var info = parser(req.headers['user-agent']);
