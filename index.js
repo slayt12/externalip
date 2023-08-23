@@ -6,12 +6,18 @@ var parser = require('ua-parser-js');
 
 app.set('trust proxy', true)
 
-app.get('/', (req, res) => {
+
+
+
+app.get('/', async (req, res) => {
+    async function getISP() {
+        const {isp} = await fetch('http://ip-api.com/json/').then(res => res.json());
+        return isp;
+    }
     var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
         <title>IP: ${req.ip}</title>
-=======
         <title>${req.ip}</title>
         <meta name="title" content="IP No BS">
 <meta name="description" content="Returns the IP and browser version of your current connection.">
@@ -55,6 +61,7 @@ app.get('/', (req, res) => {
 </script>
         <h1>IP address: ${req.ip}</h1>
         <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
+        <h1>ISP: ${await getISP()}</h1>
         <div class="footer">
             <p>Gabriel Slayton - <a href="https://www.slaytons.net">Slayton\'s Technology Services</a></p>
     </body>
