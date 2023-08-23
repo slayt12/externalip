@@ -10,7 +10,6 @@ app.get('/', (req, res) => {
     var info = parser(req.headers['user-agent']);
     res.send(`<html>
     <head>
-<<<<<<< HEAD
         <title>IP: ${req.ip}</title>
 =======
         <title>${req.ip}</title>
@@ -22,7 +21,6 @@ app.get('/', (req, res) => {
 <meta name="language" content="English">
 <meta name="revisit-after" content="10 days">
 <meta name="author" content="Gabriel Slayton">
->>>>>>> 3aa9b61837d7dabe25fcdba9c77f239f732b11a9
     </head> 
     <style>
         body {
