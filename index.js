@@ -80,6 +80,23 @@ app.get('/', async (req, res) => {
 }
 );
 
+app.get("/api", async (req, res) => {
+    async function getISP() {
+        const { isp } = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
+        return isp;
+    }
+
+    saveLog(req.ip);
+    var info = parser(req.headers['user-agent']);
+    res.json({
+        ip: req.ip,
+        browser: {
+            name: info.browser.name,
+            version: info.browser.version
+        },
+        isp: await getISP()
+    })
+})
 
 async function saveLog(ip) {
     console.log(ip);
