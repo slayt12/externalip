@@ -3,6 +3,8 @@
  *
  * Returns the visitor IP, a parsed browser name and version, and an ISP name.
  * Deployed on Replit with local port 80 (.replit). PORT overrides that default.
+ * On Vercel this file is the zero-config Express entrypoint: Vercel loads it
+ * as a module and serves the exported app, so the listen block never runs.
  *
  * Invariants:
  * - HTML is escaped. The ISP lookup never follows redirects and never sends
@@ -99,4 +101,6 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createApp };
+// Vercel loads this file as a module and needs the app as the default export.
+module.exports = app;
+module.exports.createApp = createApp;
