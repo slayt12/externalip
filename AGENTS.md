@@ -1,0 +1,14 @@
+# Agent notes
+
+## Known gotchas
+
+- ip-api.com free JSON is HTTP only. HTTPS and commercial use require their paid plan. Docs: https://ip-api.com/docs/api:json. Do not switch the lookup to `https://` without a pro key or the ISP line breaks. Keep `redirect: 'error'` so a cleartext response cannot steer the request to another host. The free cap is 45 requests per minute from this server's IP; this app stays under that with a 40/minute outbound cap and a 10-minute cache.
+- `ua-parser-js` 1.0.41 is the latest MIT release. 2.0.0 and later are AGPL-3.0-or-later (PRO licenses exist for proprietary use). Migration notes: https://docs.uaparser.dev/intro/whats-new.html. CVE-2026-48125 / GHSA-9h5v-pfqq-x599 is a `withClientHints()` ReDoS in 2.0.1 through 2.0.9, fixed in 2.0.10 by capping client-hint input at 500 characters. This app does not use client hints.
+- The 2021 ua-parser-js malware was versions 0.7.29, 0.8.0, and 1.0.0 only. 1.0.41 is not those releases.
+- Express 5.3.0 (2026-10-09) is the current release and needs Node 18+. Express 4.22.3 is the latest 4.x and declares `proxy-addr` as `~2.0.7`, which still allows the vulnerable 2.0.7. Express 5 requires `proxy-addr` `^2.0.8`. Migration guide: https://expressjs.com/en/guide/migrating-5.html. This app's routes are `/` and `/api` only, so the Express 5 path syntax changes do not apply. Express 5 passes listen errors to the `app.listen` callback.
+- `GHSA-jqcg-44mw-7w3h` (proxy-addr &lt; 2.0.8, critical): IPv4-mapped IPv6 addresses could be treated as trusted when they should not. Fixed in proxy-addr 2.0.8.
+- `qs` advisories through 6.15.3 (array-limit bypass `GHSA-x5fp-wj9c-mxmx`, `isBuffer` denial of service `GHSA-4mjr-xmp4-gh2g`) are fixed in 6.16.0+. `body-parser` &lt; 1.20.6 (`GHSA-v422-hmwv-36x6`) could ignore a bad `limit` and disable body size enforcement. This app does not parse request bodies; Express 5 still pulls body-parser 2.x.
+- `npm audit` reads `package-lock.json`. Bun reads `bun.lock`. They had drifted: the npm lockfile still resolved express 4.22.2, proxy-addr 2.0.7, and qs 6.15.2 while `node_modules` from Bun was already newer. Update both lockfiles in the same change.
+- `.replit` publishes local port 80. Keep the default listen port at 80 unless that file changes. `PORT` overrides it.
+- `app.set('trust proxy', true)` makes `req.ip` the leftmost `X-Forwarded-For` entry, which the client can forge. `1` trusts only the nearest proxy. Express compiles a hop count as `function (address, index) { return index < hops }`.
+- The Stripe buy button needs `https://js.stripe.com`, `https://*.js.stripe.com`, and `https://hooks.stripe.com` in CSP `script-src` / `frame-src`, plus `https://api.stripe.com` in `connect-src`. Stripe documents this for Stripe.js. The key on the page is the publishable `pk_live_` key.

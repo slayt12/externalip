@@ -1,108 +1,102 @@
-// using express, when a client connects to the service, return the client IP address
+/**
+ * External IP check service.
+ *
+ * Returns the visitor IP, a parsed browser name and version, and an ISP name.
+ * Deployed on Replit with local port 80 (.replit). PORT overrides that default.
+ *
+ * Invariants:
+ * - HTML is escaped. The ISP lookup never follows redirects and never sends
+ *   private addresses off-box.
+ * - Exactly one proxy hop is trusted unless TRUST_PROXY says otherwise.
+ *   TRUST_PROXY=true restores the old "trust every hop" behavior.
+ *
+ * Exit codes: 0 while serving; 1 if the listen socket fails.
+ */
+
+'use strict';
 
 const express = require('express');
-const app = express();
-var parser = require('ua-parser-js');
+const { trustProxySetting } = require('./lib/trust-proxy/trust-proxy');
+const { browserInfo } = require('./lib/browser-info/browser-info');
+const { lookupIsp } = require('./lib/lookup-isp/lookup-isp');
+const { createRateLimit } = require('./lib/rate-limit/rate-limit');
+const { renderPage } = require('./lib/render-page/render-page');
+const { securityHeaders } = require('./lib/security-headers/security-headers');
 
-app.set('trust proxy', true)
+function createApp(options = {}) {
+  const app = express();
+  const lookup = options.lookupIsp || lookupIsp;
+  const limit = options.rateLimit || createRateLimit();
 
+  app.disable('x-powered-by');
+  app.set('trust proxy', options.trustProxy ?? trustProxySetting());
+  app.use(securityHeaders);
+  app.use(limit);
 
+  app.get('/', async (req, res) => {
+    const report = await clientReport(req, lookup);
+    res.type('html').send(renderPage({
+      ip: report.ip,
+      browserName: report.browser.name,
+      browserVersion: report.browser.version,
+      isp: report.isp,
+      nonce: res.locals.nonce,
+    }));
+  });
 
-
-app.get('/', async (req, res) => {
-    async function getISP() {
-        const { isp } = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
-        return isp;
-    }
-
-    saveLog(req.ip);
-    var info = parser(req.headers['user-agent']);
-    res.send(`<html>
-    <head>
-        <title>IP: ${req.ip}</title>
-        <title>${req.ip}</title>
-        <meta name="title" content="IP No BS">
-<meta name="description" content="Returns the IP and browser version of your current connection.">
-<meta name="keywords" content="what is my ip, my ip, ip address, browser version, ipv4, what's my ip">
-<meta name="robots" content="index, follow">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="language" content="English">
-<meta name="revisit-after" content="10 days">
-<meta name="author" content="Gabriel Slayton">
-    </head> 
-    <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 1.5em;
-            text-align: center;
-            margin-top: 10%;
-        }
-        .footer {
-            position: fixed;
-            bottom: 10;
-            width: 100%;
-            text-align: center;
-            color: #ffffff;
-        }
-        p a {
-            color: #ffffff;
-            text-decoration: none;
-        }
-    </style>
-    <body>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-68ZJDQH8YZ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-68ZJDQH8YZ');
-</script>
-        <h1>IP address: ${req.ip}</h1>
-        <h1>Browser: ${info.browser.name} version ${info.browser.version}</h1>
-        <h1>ISP: ${await getISP()}</h1>
-        <script async
-  src="https://js.stripe.com/v3/buy-button.js">
-</script>
-
-<stripe-buy-button
-  buy-button-id="buy_btn_1NiO2oEPb7xHDOFyKoygn0os"
-  publishable-key="pk_live_51Ne1OuEPb7xHDOFyN3seam6hy5oV2HPmDSFRbTcPuy0rKC3jqmj23Zys6dvbZ2xLWlbLlOrkzeQjA7wDqWCq3Ob600Z2VISyFc"
->
-</stripe-buy-button>
-        <div class="footer">
-            <p>Gabriel Slayton - <a href="https://www.slaytons.net">Slayton\'s Technology Services</a></p>
-    </body>
-    </html>`);
-}
-);
-
-app.get("/api", async (req, res) => {
-    async function getISP() {
-        const { isp } = await fetch(`http://ip-api.com/json/${req.ip}`).then(res => res.json());
-        return isp;
-    }
-
-    saveLog(req.ip);
-    var info = parser(req.headers['user-agent']);
+  app.get('/api', async (req, res) => {
+    const report = await clientReport(req, lookup);
     res.json({
-        ip: req.ip,
-        browser: {
-            name: info.browser.name,
-            version: info.browser.version
-        },
-        isp: await getISP()
-    })
-})
+      ip: report.ip,
+      browser: {
+        name: report.browser.name,
+        version: report.browser.version,
+      },
+      isp: report.isp,
+    });
+  });
 
-async function saveLog(ip) {
-    console.log(ip);
+  app.use((err, req, res, next) => {
+    console.error(err);
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+    res.status(500).type('text/plain').send('Something went wrong');
+  });
+
+  return app;
 }
 
-const port = process.env.PORT || 80;
+async function clientReport(req, lookup) {
+  const ip = typeof req.ip === 'string' ? req.ip : '';
+  const browser = browserInfo(req.get('user-agent'));
+  let isp = 'unknown';
+  try {
+    const found = await lookup(ip);
+    if (typeof found === 'string' && found) isp = found;
+  } catch (err) {
+    console.error('ISP lookup failed');
+  }
+  console.log(ip);
+  return { ip, browser, isp };
+}
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+const app = createApp();
 
+if (require.main === module) {
+  const port = Number(process.env.PORT) || 80;
+  const server = app.listen(port, (error) => {
+    if (error) {
+      console.error(error);
+      process.exit(1);
+    }
+    console.log(`Listening on port ${port}`);
+  });
+  server.on('error', (error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = { createApp };
