@@ -15,6 +15,32 @@ Replit maps container port 80 (see `.replit`). Set `PORT` to listen somewhere el
 PORT=3000 npm start
 ```
 
+Node 22 is required (`engines.node` is `22.x`). Vercel reads that field to pick the runtime.
+
+## Deploy to Vercel
+
+Vercel runs this as a zero-config Express app: it finds `index.js` at the root and turns the whole app into one function. `.replit`, the port-80 default, and `PORT` are not used there.
+
+Vercel requires the entry file to export the Express app or call `app.listen`. `index.js` exports the app as `module.exports` (with `createApp` attached for the tests) and only calls `listen` when run directly with `node index.js`. Keep both.
+
+```bash
+npm i -g vercel          # CLI 47.0.5 or newer
+vercel link              # once; writes .vercel/ (git-ignored)
+vercel dev               # run locally the way Vercel will
+vercel deploy            # preview deployment
+vercel deploy --prod     # production
+```
+
+You can also connect the Git repository in the Vercel dashboard, which deploys previews on every push and production builds from `master`.
+
+Notes for Vercel:
+
+- Leave `TRUST_PROXY` unset. Vercel replaces `X-Forwarded-For` with the real client IP, so the default of one trusted hop is correct.
+- The rate limiter, ISP cache, and outbound cap live in memory, so each function instance has its own copy and a cold start clears them. To enforce a per-client limit across instances, use Vercel Firewall rate limiting.
+- `vercel dev` does not keep that in-memory state between requests at all, so the rate limiter never triggers there. Test it with `npm start` instead.
+- Outbound requests come from Vercel's shared egress IPs, so ip-api.com's 45-per-minute limit is shared with other tenants. Expect `unknown` ISP results more often than on a dedicated host.
+- `vercel env pull` writes `.env.local`, which contains a `VERCEL_OIDC_TOKEN`. `.gitignore` excludes `.env*` and `.vercel`. Do not commit them.
+
 ## Configuration
 
 | Variable | Default | Meaning |
